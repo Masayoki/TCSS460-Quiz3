@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Computer Vision API</title>
+  <!-- Add a reference to the external stylesheet -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+  <!-- HTML code for displaying the navigation bar on the top -->
+  <nav class="navbar navbar-dark bg-primary mb-3">
+    <div class="container">
+      <a href="#" class="navbar-brand">Computer Vision API</a>
+    </div>
+  </nav>
+
+  <!-- HTML code for displaying the API call container -->
+  <div class="container mainContainer">
+    <div class="card border-primary mb-3">
+      <div class="card-header">Computer Vision API</div>
+      <div class="card-body">
+        <form id="apiForm">
+          <div class="form-group">
+            <label for="GeneralInfo">General Purpose Information</label>
+                <br>
+                <button type="button" class="btn btn-primary" id="getGeneralInfo">Get General Purpose Information</button>
+            </div>
+          
+          <div class="form-group">
+            <label for="urlMethod">Select image method:</label>
+            <select class="form-control" id="urlMethod" name="urlMethod">
+              <option value="url">By URL</option>
+              <option value="upload">Upload Binary File</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="urlInput">
+            <label for="imageUrl">Image URL:</label>
+            <input type="text" class="form-control" id="imageUrl" name="imageUrl" placeholder="Enter image URL">
+          </div>
+
+          <div class="form-group" id="fileInput" style="display:none;">
+            <label for="imageFile">Upload Binary File:</label>
+            <input type="file" class="form-control" id="imageFile" name="imageFile">
+          </div>
+
+          <div class="form-group">
+            <label for="visualFeatures">Select visual features:</label>
+            <input type="checkbox" id="categories" name="visualFeatures" value="Categories"> Categories
+            <input type="checkbox" id="color" name="visualFeatures" value="Color"> Color
+            <input type="checkbox" id="description" name="visualFeatures" value="Description"> Description
+            <!-- Add more checkboxes for additional visual features -->
+          </div>
+
+          <div class="form-group">
+            <label for="details">Select details:</label>
+            <input type="checkbox" id="faces" name="details" value="Faces"> Faces
+            <input type="checkbox" id="objects" name="details" value="Objects"> Objects
+            <!-- Add more checkboxes for additional details -->
+          </div>
+
+          <button type="button" class="btn btn-primary" id="callApi">Call Computer Vision API</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Display General Purpose Information response -->
+    <div class="card border-primary mb-3" id="generalInfoResponseContainer" style="display:none;">
+        <div class="card-header">General Purpose Information Response</div>
+        <div class="card-body">
+          <pre id="generalInfoResponse"></pre>
+        </div>
+      </div>
+      
+    <!-- Display API response -->
+    <div class="card border-primary mb-3" id="apiResponseContainer" style="display:none;">
+      <div class="card-header">API Response</div>
+      <div class="card-body">
+        <pre id="apiResponse"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include jQuery and Bootstrap JavaScript -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
+  <script>
+    // JavaScript code for handling API call
+    $('#getGeneralInfo').click(async function () {
+        try {
+        // Make API call for general purpose information
+        const response = await fetch('http://localhost:3000/twsi');
+
+        const data = await response.json();
+
+        // Display the API response for general purpose information
+        $('#generalInfoResponse').html(JSON.stringify(data, null, 2));
+        $('#generalInfoResponseContainer').show();
+        } catch (error) {
+        console.error('Error calling General Purpose Information API:', error);
+        }
+    });
+
+    $('#callApi').click(async function () {
+      try {
+        // Prepare data based on user input
+        const formData = new FormData($('#apiForm')[0]);
+        const url = formData.get('urlMethod') === 'url' ? formData.get('imageUrl') : null;
+        const visualFeatures = $('input[name="visualFeatures"]:checked').map(function () {
+          return $(this).val();
+        }).get().join(',');
+        const details = $('input[name="details"]:checked').map(function () {
+          return $(this).val();
+        }).get().join(',');
+
+        // Make API call
+        const response = await fetch('http://localhost:3000/twsi/cv/detect/url', {
+          method: 'POST',
+          headers: {
+            'Ocp-Apim-Subscription-Key': '8fc3e5588bd84720a9142ba5f1eda4a4',
+          },
+          body: JSON.stringify({
+            url,
+            visualFeatures,
+            details,
+          }),
+        });
+
+        const data = await response.json();
+
+        // Display the API response
+        $('#apiResponse').html(JSON.stringify(data, null, 2));
+        $('#apiResponseContainer').show();
+      } catch (error) {
+        console.error('Error calling Computer Vision API:', error);
+      }
+    });
+
+    // Show/hide input fields based on the selected image method
+    $('#urlMethod').change(function () {
+      const selectedMethod = $(this).val();
+      if (selectedMethod === 'url') {
+        $('#urlInput').show();
+        $('#fileInput').hide();
+      } else if (selectedMethod === 'upload') {
+        $('#urlInput').hide();
+        $('#fileInput').show();
+      }
+    });
+  </script>
+</body>
+
+</html>
